@@ -20,7 +20,7 @@ const (
 
 // Margins. X coordinates; higher numbers move them to the right of the image.
 const (
-	_leftMargin  = 50
+	_leftMargin  = 10
 	_rightMargin = 180
 )
 
@@ -33,7 +33,7 @@ const (
 )
 
 const (
-	_gapBetweenUpdates        = 30 // Space between each predicted arrrival.
+	_gapBetweenUpdates        = 40 // Space between each predicted arrrival.
 	_gapBetweenStopAndUpdates = 20 // Space between the top and bottom rows and arrivals.
 )
 
@@ -76,8 +76,8 @@ func SubwayClock(update models.FeedUpdate, stopID string, northLabel string, sou
 		Max: image.Point{X: _maxX, Y: _maxY},
 	})
 
-	addLabel(img, _leftMargin, _topRow, southLabel, _red)
-	addLabel(img, _leftMargin, _bottomRow, northLabel, _red)
+	addLabel(img, _leftMargin, _topRow, northLabel, _red)
+	addLabel(img, _leftMargin, _bottomRow, southLabel, _red)
 
 	status, ok := update.StationStatus[stopID]
 	if !ok { // No stop information, don't render anything else.
@@ -87,11 +87,10 @@ func SubwayClock(update models.FeedUpdate, stopID string, northLabel string, sou
 	now := time.Now()
 
 	if updates, ok := status.StopIDToUpdates[stopID+"S"]; ok {
-		renderArrivals(updates, img, _leftMargin+_gapBetweenUpdates, _topRow+_gapBetweenStopAndUpdates, now)
+		renderArrivalTimes(updates, img, _leftMargin, _bottomRow+_gapBetweenStopAndUpdates, now)
 	}
-
 	if updates, ok := status.StopIDToUpdates[stopID+"N"]; ok {
-		renderArrivals(updates, img, _leftMargin+_gapBetweenUpdates, _bottomRow+_gapBetweenStopAndUpdates, now)
+		renderArrivalTimes(updates, img, _leftMargin, _topRow+_gapBetweenStopAndUpdates, now)
 	}
 
 	if len(update.Alerts) != 0 {
@@ -101,7 +100,22 @@ func SubwayClock(update models.FeedUpdate, stopID string, northLabel string, sou
 	return img
 }
 
-func renderArrivals(updates []models.StationUpdate, img *image.RGBA, x int, y int, now time.Time) {
+func renderArrivalTimes(updates []models.StationUpdate, img *image.RGBA, x int, y int, now time.Time) {
+	for _, update := range updates {
+		difference := update.Arrival.Sub(now)
+		if difference < 0 {
+			continue
+		}
+
+		addLabel(img, x, y, update.Arrival.Format("3:04"), _white)
+		x += _gapBetweenUpdates
+		if x > _rightMargin {
+			break
+		}
+	}
+}
+
+func renderArrivalMinutes(updates []models.StationUpdate, img *image.RGBA, x int, y int, now time.Time) {
 	for _, update := range updates {
 		minutes := update.Arrival.Sub(now).Round(time.Minute) / time.Minute
 		if minutes < 0 {
