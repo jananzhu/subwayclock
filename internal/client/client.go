@@ -4,7 +4,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"sort"
-	"strconv"
 	"time"
 
 	"github.com/golang/protobuf/proto"
@@ -23,12 +22,12 @@ const (
 
 const _avgNumStopsPerLine = 30
 
-const _baseURL = "http://datamine.mta.info/mta_esi.php?key="
+const _baseURL = "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-"
 
 // Config defines how to configure the subway client.
 type Config struct {
 	APIKey string `yaml:"api_key" json:"api_key"`
-	FeedID int    `yaml:"feed_id" json:"feed_id"`
+	FeedID string `yaml:"feed_id" json:"feed_id"`
 }
 
 // NYCTA is a client for the New York City Transit Authority's realtime feed.
@@ -40,8 +39,8 @@ type NYCTA struct {
 // NewNYCTA creates a new New York City Transit Authority client.
 // An error will be returned if the configuration is invalid.
 func NewNYCTA(cfg *Config) (*NYCTA, error) {
+	url := _baseURL + cfg.FeedID
 
-	url := "http://datamine.mta.info/mta_esi.php?key=" + cfg.APIKey + "&feed_id=" + strconv.Itoa(cfg.FeedID)
 	return &NYCTA{
 		cfg: cfg,
 		url: url,
@@ -51,7 +50,15 @@ func NewNYCTA(cfg *Config) (*NYCTA, error) {
 // GetFeed retrieves the current feed information.
 // Currently for testing purposes it returns a JSON string.
 func (n *NYCTA) GetFeed() (models.FeedUpdate, error) {
-	resp, err := http.Get(n.url)
+	client := http.DefaultClient
+
+	req, err := http.NewRequest("GET", n.url, nil)
+	if err != nil {
+		return models.FeedUpdate{}, err
+	}
+
+	req.Header.Add("x-api-key", n.cfg.APIKey)
+	resp, err := client.Do(req)
 	if err != nil {
 		return models.FeedUpdate{}, err
 	}
