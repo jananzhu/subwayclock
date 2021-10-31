@@ -21,9 +21,11 @@ const _7SouthDir = "(7) 34 - HUDSON"
 const _updateFrequency = 1 * time.Minute
 
 func main() {
+	// See https://api.mta.info/#/subwayRealTimeFeeds for new FeedID formats - each group of lines now has different feed
+	// IRT lines use empty string ID, other lines use alphabet identifier (eg. bdfm, ace, nqrw)
 	nycta, err := client.NewNYCTA(&client.Config{
 		APIKey: "",
-		FeedID: 51,
+		FeedID: "",
 	})
 
 	if err != nil {

@@ -22,7 +22,7 @@ const (
 
 const _avgNumStopsPerLine = 30
 
-const _baseURL = "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-"
+const _baseURL = "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs"
 
 // Config defines how to configure the subway client.
 type Config struct {
